@@ -1,0 +1,4 @@
+Files dist/linux-4.1.13/arch/x86/syscalls/syscall_32.tbl and /home/elijah/pp3-mkpatch/work/linux-4.1.13/arch/x86/syscalls/syscall_32.tbl differ
+Only in /home/elijah/pp3-mkpatch/work/linux-4.1.13: .config
+Files dist/linux-4.1.13/include/linux/sched.h and /home/elijah/pp3-mkpatch/work/linux-4.1.13/include/linux/sched.h differ
+Files dist/linux-4.1.13/kernel/sys.c and /home/elijah/pp3-mkpatch/work/linux-4.1.13/kernel/sys.c differ

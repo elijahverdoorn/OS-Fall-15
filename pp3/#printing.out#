@@ -1,0 +1,55 @@
+diff -Naur dist/linux-4.1.13/include/linux/sched.h /home/elijah/pp3-mkpatch/work/linux-4.1.13/include/linux/sched.h
+--- dist/linux-4.1.13/include/linux/sched.h	2015-11-09 16:34:10.000000000 -0600
++++ /home/elijah/pp3-mkpatch/work/linux-4.1.13/include/linux/sched.h	2015-12-12 23:01:43.410647000 -0600
+@@ -1724,6 +1724,11 @@
+ #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+ 	unsigned long	task_state_change;
+ #endif
++  
++  //ERV's int value
++  int erv_val;
++
++
+ };
+ 
+ /* Future-safe accessor for struct task_struct's cpus_allowed. */
+diff -Naur dist/linux-4.1.13/kernel/sys.c /home/elijah/pp3-mkpatch/work/linux-4.1.13/kernel/sys.c
+--- dist/linux-4.1.13/kernel/sys.c	2015-11-09 16:34:10.000000000 -0600
++++ /home/elijah/pp3-mkpatch/work/linux-4.1.13/kernel/sys.c	2015-12-12 23:18:33.310647000 -0600
+@@ -832,6 +832,36 @@
+ 	return task_tgid_vnr(current);
+ }
+ 
++/**
++ * erv_test_call - ERV's call that is just a clone of getpid()
++ */
++SYSCALL_DEFINE0(erv_test_call)
++{
++	return task_tgid_vnr(current);
++}
++
++/**
++ * erv_put_val - ERV's call that puts a val into the task struct
++ */
++SYSCALL_DEFINE1(erv_put_val, int, arg)
++{
++  current->erv_val = arg;
++  return 0;
++}
++
++
++/**
++ * erv_get_val - ERV's call that gets a val from the task struct
++ */
++SYSCALL_DEFINE1(erv_get_val, int, arg)
++{
++  pid_t argpid;
++  struct task_struct *myTask;
++  argpid = arg;
++  myTask = find_task_by_vpid(argpid);
++  return myTask->erv_val;
++}
++
+ /* Thread ID - the internal kernel "pid" */
+ SYSCALL_DEFINE0(gettid)
+ {

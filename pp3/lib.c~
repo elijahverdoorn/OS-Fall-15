@@ -1,0 +1,33 @@
+/* library source for new system calls */
+
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <stdio.h>
+#include <sys/types.h>
+
+extern int errno;
+
+#define __NR_dub		 41
+#define __NR_erv_test_call       359
+
+int dub(int fd) {
+  return syscall(__NR_dub, fd);
+}
+
+int test_call() {
+  //printf("test");
+
+  return syscall(__NR_erv_test_call);
+}
+
+
+/* The following would appear in the caller's program...
+
+main()
+{
+  dub(1);
+}
+
+
+*/

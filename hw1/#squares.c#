@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main (int argc)
+{
+  int numSquares;
+  printf("Enter a positive integer: ");
+  scanf("%i", numSquarenclude <stdio.h>
+	#include <stdlib.h>
+
+	int main (int argc)
+	{
+	  int numSquares;
+	  printf("Enter a positive integer: ");
+	  scanf("%i", numSquares);
+	  int counter = 1;
+	  printf("N\t | N*N");
+	  for (counter; counter != numSquares; counter++)
+	    {
+	      int current = counter * counter;
+	      printf("%i\t | %i", counter, current);
+	    }
+	  printf("\n");
+
+	  exit(argc);
+	}
+
+
+
+	s);
+  int counter = 1;
+  printf("N\t | N*N"); 
+  for (counter; counter != numSquares; counter++)
+    {
+      int current = counter * counter;
+      printf("%i\t | %i", counter, current);
+    }
+  printf("\n");
+
+  exit(argc);
+}
+
+  

@@ -1,0 +1,109 @@
+#! /bin/sh
+# Create patch for programming project to modify linux kernel
+# RAB 1/01.  Modified to generate from a distclean copy 12/05
+# rewritten for virtual-box setup 5/12
+PROG=`basename $0`
+
+#VERS=linux-3.11.1
+VERS=linux-4.1.13
+#WWWDIST=http://www.kernel.org/pub/linux/kernel/v3.0/linux-3.11.1.tar.bz2
+WWWDIST=http://www.kernel.org/pub/linux/kernel/v4.x/linux-4.1.13.tar.xz
+#TARFLAG=j # flag for compression type
+TARFLAG=J # flag for compression type
+#DIST_MD5SUM=82abc9ff2d418e200e33b8d4fa5bf80f
+DIST_MD5SUM=af9dd5d8f71185a64a8eccface15fc00  # linux-4.1.13.tar.xz
+# md5sum <tarball> | ssh arachne.cs.stolaf.edu "cat > ~/tmp/in"
+DISTNAME=`basename $WWWDIST`
+PATCHFILE=patch.out
+DIFFFILE=files.out
+WD1=`pwd`
+
+PATCHDIR=$HOME/pp3-mkpatch
+WORK=/usr/src/$VERS
+TARBALL=$HOME/$DISTNAME
+
+USAGE="Usage:  $PROG [-patchdir dir] [-tarball file] [-work dir] [--help]
+   Default values: 
+	work=$WORK  development directory containing sources after changes
+	patchdir=$PATCHDIR  temp directory for creating patch
+	tarball=$TARBALL  tarball of original Linux distribution" 
+
+while test $# -ge 2
+do  case $1 in 
+	-tarball) test $# -ge 2 || { echo "$USAGE" ; exit 1 ; }
+	    TARBALL="$2" 
+	    case "$TARBALL" in 
+		/*) ;;
+		*) DIST=$WD1/$TARBALL ;;
+	    esac
+	    shift ; shift ;;
+	-work) test $# -ge 2 || { echo "$USAGE" ; exit 1 ; }
+	    WORK="$2" 
+	    case "$WORK" in 
+		/*) ;;
+		*) WORK=$WD1/$WORK ;;
+	    esac
+	    shift ; shift ;;
+	-patchdir) test $# -ge 2 || { echo "$USAGE" ; exit 1 ; }
+	    PATCHDIR=$2 ; shift ; shift ;;
+	--help) echo "$USAGE" ; exit 0 ;;
+	*)  echo "$USAGE" ; exit 1 ;;
+    esac
+done 1>&2
+case $# in
+    0) ;;
+    *) echo "$USAGE" ; exit 1 ;;
+esac 1>&2 
+# command-line args parsed;  WORK and TARBALL are absolute paths
+
+WORK2=$PATCHDIR/work/$VERS
+PATCH=$PATCHDIR/$PATCHFILE
+DIFF_OUT=$PATCHDIR/$DIFFFILE
+{ mkdir -p $PATCHDIR && cd $PATCHDIR ; } 1>&2 || {
+    echo "could not cd to $PATCHDIR, aborting" ; exit 1 ; } 1>&2
+EXIST=
+test -f $PATCH && EXIST="$EXIST $PATCH"
+test -d $WORK2 && EXIST="$EXIST $WORK2"
+test -n "$EXIST" && {
+    echo "$EXIST already exist."  
+    echo -n "Delete them and regenerate?  (Y/n): "; read ANS
+    case "$ANS" in 
+	""|[Yy]*) rm -rf $EXIST ;;
+	*) exit 0;;
+    esac
+}
+make -f - 1>&2 <<EOF || { 
+# makefile for patch
+all:  $WORK2 dist/$VERS $PATCH
+
+$WORK2: 
+	@echo ; echo 'making symlink copy of $WORK...'
+	mkdir -p $WORK2
+	(cd $WORK ; find . -type d) | (cd $WORK2 ; xargs mkdir -p) || { \
+	    rm -rf $WORK2; echo "could not make $WORK2 subdirs"; false ; }
+	(cd $WORK ; find . \! -type d) | \
+	(cd $WORK2 ; awk '{print "ln -s $WORK/" \$\$1 " "  \$\$1}' | sh) || {\
+	    rm -rf $WORK2; echo "could not make $WORK2 symlinks"; false ; }
+	cd $WORK2 ; sed 's/-type f/-type l/' Makefile | make -f - distclean
+	cp $WORK/.config $WORK2 
+
+dist/$VERS: $TARBALL
+	@test "`md5sum $TARBALL | awk '{print \$1}'`" = "$DIST_MD5SUM" || { \
+	    echo 'Tarball $TARBALL differs from original distribution according to md5sum - aborting' ; false ; }
+	@echo ; echo 'Unpacking verified tarball...'
+	cd $PATCHDIR ; mkdir -p dist ; tar xf$TARFLAG $TARBALL -C dist || ( \
+	    rm -rf dist/$VERS ; false ; )
+	touch dist/$VERS
+
+$PATCH:  # $WORK2 dist/$VERS
+	@echo ; echo 'making the patch...'
+	cd $PATCHDIR ; diff -Naur dist/$VERS $WORK2 > $PATCH || { echo $status ; true ; }
+	cd $PATCHDIR ; diff -qr dist/$VERS $WORK2 > $DIFF_OUT || { echo $status ; true ; }
+EOF
+    echo "Could not create patch $PATCH -- aborting"
+    exit 1
+}  1>&2 
+
+echo "resulting patch located at $PATCH, file list at $DIFF_OUT" 1>&2 
+exit 0
+
